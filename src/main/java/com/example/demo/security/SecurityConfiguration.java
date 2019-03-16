@@ -10,6 +10,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
@@ -18,48 +20,25 @@ import org.springframework.security.provisioning.JdbcUserDetailsManager;
 @EnableWebSecurity
 public class SecurityConfiguration  extends WebSecurityConfigurerAdapter {
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-
+    private final UserDetailsService userDetailsService;
 
     @Autowired
-    public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
-
-        auth.jdbcAuthentication().dataSource(jdbcTemplate.getDataSource())
-                .usersByUsernameQuery(
-                        "select username,password, enabled from users where username=?")
-                .authoritiesByUsernameQuery(
-                        "select username, authority from authorities where username=?");
+    public SecurityConfiguration(UserDetailsService userDetailsService) {
+        super();
+        this.userDetailsService = userDetailsService;
     }
 
-    @Bean
     @Override
-    public JdbcUserDetailsManager userDetailsService() {
-        JdbcUserDetailsManager manager = new JdbcUserDetailsManager();
-        manager.setJdbcTemplate(jdbcTemplate);
-        return manager;
+    protected void configure(final AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userDetailsService);
     }
-
-    /*@Override
-    protected void configure(AuthenticationManagerBuilder auth)
-            throws Exception {
-
-        PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
-
-        auth
-                .inMemoryAuthentication()
-                .withUser("user1")
-                .password(encoder.encode("password"))
-                .roles("USER")
-                .and()
-                .withUser("admin")
-                .password(encoder.encode("admin"))
-                .roles("USER", "ADMIN");
-    }*/
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http    .headers().frameOptions().disable()
+        http    .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .headers().frameOptions().disable()
                 .and()
                 .authorizeRequests()
                 .antMatchers("/h2/**").permitAll()
