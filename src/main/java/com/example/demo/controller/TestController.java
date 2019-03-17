@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -23,8 +24,8 @@ public class TestController {
         return user;
     }
 
-    @PostMapping("/resource1")
-    public String helloUser(String userName) {
+    @PostMapping("/resource")
+    public String helloUser(@RequestBody String userName) {
         log.info("post resource");
         return "{\"Hello\":\"" + userName +"!\"}";
     }
